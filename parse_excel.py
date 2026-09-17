@@ -48,7 +48,41 @@ for rec in records:
     categories[cat] = categories.get(cat, 0) + amt
 
 summary = {
+    'title': '카드별 지출 현황 및 가계부 대시보드',
+    'subtitle': '뱅크샐러드 데이터 기반 (2026-09-01 ~ 2026-09-10)',
     'period': '2026-09-01 ~ 2026-09-10',
+    'physicalCards': [
+        "신한은행 The More",
+        "KT Plus 우리카드",
+        "MG+ S 하나카드",
+        "KB국민 톡톡 my point카드",
+        "다드림 LOVE",
+        "아시아나 KB국민플래티늄카드",
+        "기타 카드"
+    ],
+    'payAndAccounts': [
+        "[간편결제] 네이버페이",
+        "[간편결제] 네이버페이(포인트)",
+        "[간편결제] 카카오페이",
+        "[간편결제] 페이코",
+        "[간편결제] 토스",
+        "계좌/현금"
+    ],
+    'allCards': [
+        "신한은행 The More",
+        "KT Plus 우리카드",
+        "MG+ S 하나카드",
+        "KB국민 톡톡 my point카드",
+        "다드림 LOVE",
+        "아시아나 KB국민플래티늄카드",
+        "기타 카드",
+        "[간편결제] 네이버페이",
+        "[간편결제] 네이버페이(포인트)",
+        "[간편결제] 카카오페이",
+        "[간편결제] 페이코",
+        "[간편결제] 토스",
+        "계좌/현금"
+    ],
     'totalRecords': len(records),
     'totalAmount': sum(r['amount'] for r in records),
     'cards': sorted([{'name': k, 'amount': v} for k, v in cards.items()], key=lambda x: -x['amount']),
@@ -56,7 +90,9 @@ summary = {
     'records': records
 }
 
-with open('data.json', 'w', encoding='utf-8') as f:
+with open('data.js', 'w', encoding='utf-8') as f:
+    f.write('window.INITIAL_DATA = ')
     json.dump(summary, f, ensure_ascii=False, indent=2)
+    f.write(';\n')
 
-print("Saved to data.json successfully!")
+print("Saved to data.js successfully!")

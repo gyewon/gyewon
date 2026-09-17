@@ -34,9 +34,124 @@ window.INITIAL_DATA = {
     "[간편결제] 토스",
     "계좌/현금"
   ],
+  "totalRecords": 65,
+  "totalAmount": 1374936,
+  "cards": [
+    {
+      "name": "[간편결제] 카카오페이",
+      "amount": 420190
+    },
+    {
+      "name": "[간편결제] 네이버페이",
+      "amount": 226070
+    },
+    {
+      "name": "MG+ S 하나카드",
+      "amount": 165400
+    },
+    {
+      "name": "다드림 LOVE",
+      "amount": 120666
+    },
+    {
+      "name": "신한은행 The More",
+      "amount": 120011
+    },
+    {
+      "name": "계좌/현금",
+      "amount": 110400
+    },
+    {
+      "name": "KT Plus 우리카드",
+      "amount": 99700
+    },
+    {
+      "name": "[간편결제] 페이코",
+      "amount": 95300
+    },
+    {
+      "name": "[간편결제] 토스",
+      "amount": 14699
+    },
+    {
+      "name": "[간편결제] 네이버페이(포인트)",
+      "amount": 2500
+    }
+  ],
+  "categories": [
+    {
+      "name": "온라인쇼핑",
+      "amount": 571966
+    },
+    {
+      "name": "여행/숙박",
+      "amount": 138000
+    },
+    {
+      "name": "의료/건강",
+      "amount": 127540
+    },
+    {
+      "name": "식비",
+      "amount": 116380
+    },
+    {
+      "name": "뷰티/미용",
+      "amount": 107500
+    },
+    {
+      "name": "교통",
+      "amount": 105200
+    },
+    {
+      "name": "금융",
+      "amount": 70400
+    },
+    {
+      "name": "생활",
+      "amount": 40500
+    },
+    {
+      "name": "카페/간식",
+      "amount": 26800
+    },
+    {
+      "name": "문화/여가",
+      "amount": 24000
+    },
+    {
+      "name": "교육/학습",
+      "amount": 19000
+    },
+    {
+      "name": "패션/쇼핑",
+      "amount": 16900
+    },
+    {
+      "name": "주거/통신",
+      "amount": 10750
+    }
+  ],
   "records": [
     {
       "id": 1,
+      "origId": 169,
+      "date": "2026-09-01",
+      "time": "07:06:07",
+      "month": "9월",
+      "category": "온라인쇼핑",
+      "subCategory": "결제/충전",
+      "merchant": "업비트 자동 입금",
+      "amount": 10000,
+      "origPay": "듀얼K  입출금통장",
+      "actualCard": "계좌/현금",
+      "installment": "일시불",
+      "billingAmount": 10000,
+      "exclude": "N",
+      "memo": ""
+    },
+    {
+      "id": 2,
       "origId": 170,
       "date": "2026-09-01",
       "time": "08:59:57",
@@ -53,7 +168,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 2,
+      "id": 3,
       "origId": 171,
       "date": "2026-09-01",
       "time": "09:09:03",
@@ -70,7 +185,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 3,
+      "id": 4,
       "origId": 172,
       "date": "2026-09-01",
       "time": "09:48:17",
@@ -87,7 +202,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 4,
+      "id": 5,
       "origId": 173,
       "date": "2026-09-01",
       "time": "11:00:38",
@@ -104,7 +219,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 5,
+      "id": 6,
       "origId": 174,
       "date": "2026-09-01",
       "time": "11:18:23",
@@ -121,7 +236,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 6,
+      "id": 7,
       "origId": 175,
       "date": "2026-09-01",
       "time": "12:26:28",
@@ -138,7 +253,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 7,
+      "id": 8,
       "origId": 176,
       "date": "2026-09-01",
       "time": "15:02:15",
@@ -155,7 +270,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 8,
+      "id": 9,
       "origId": 177,
       "date": "2026-09-02",
       "time": "01:15:00",
@@ -172,7 +287,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 9,
+      "id": 10,
       "origId": 178,
       "date": "2026-09-02",
       "time": "01:39:26",
@@ -189,7 +304,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 10,
+      "id": 11,
       "origId": 179,
       "date": "2026-09-02",
       "time": "01:43:08",
@@ -206,7 +321,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 11,
+      "id": 12,
       "origId": 180,
       "date": "2026-09-02",
       "time": "01:45:04",
@@ -223,7 +338,24 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 12,
+      "id": 13,
+      "origId": 181,
+      "date": "2026-09-02",
+      "time": "07:06:08",
+      "month": "9월",
+      "category": "온라인쇼핑",
+      "subCategory": "결제/충전",
+      "merchant": "업비트 자동 입금",
+      "amount": 5000,
+      "origPay": "듀얼K  입출금통장",
+      "actualCard": "계좌/현금",
+      "installment": "일시불",
+      "billingAmount": 5000,
+      "exclude": "N",
+      "memo": ""
+    },
+    {
+      "id": 14,
       "origId": 182,
       "date": "2026-09-02",
       "time": "11:05:24",
@@ -240,7 +372,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 13,
+      "id": 15,
       "origId": 183,
       "date": "2026-09-02",
       "time": "11:25:53",
@@ -257,7 +389,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 14,
+      "id": 16,
       "origId": 184,
       "date": "2026-09-02",
       "time": "11:50:36",
@@ -274,7 +406,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 15,
+      "id": 17,
       "origId": 185,
       "date": "2026-09-02",
       "time": "13:29:18",
@@ -291,7 +423,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 16,
+      "id": 18,
       "origId": 186,
       "date": "2026-09-02",
       "time": "15:57:26",
@@ -308,7 +440,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 17,
+      "id": 19,
       "origId": 187,
       "date": "2026-09-02",
       "time": "16:40:38",
@@ -325,7 +457,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 18,
+      "id": 20,
       "origId": 188,
       "date": "2026-09-02",
       "time": "16:43:08",
@@ -342,7 +474,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 19,
+      "id": 21,
       "origId": 189,
       "date": "2026-09-02",
       "time": "19:19:00",
@@ -359,7 +491,24 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 20,
+      "id": 22,
+      "origId": 190,
+      "date": "2026-09-03",
+      "time": "07:05:44",
+      "month": "9월",
+      "category": "온라인쇼핑",
+      "subCategory": "결제/충전",
+      "merchant": "업비트 자동 입금",
+      "amount": 10000,
+      "origPay": "듀얼K  입출금통장",
+      "actualCard": "계좌/현금",
+      "installment": "일시불",
+      "billingAmount": 10000,
+      "exclude": "N",
+      "memo": ""
+    },
+    {
+      "id": 23,
       "origId": 191,
       "date": "2026-09-03",
       "time": "17:04:32",
@@ -376,7 +525,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 21,
+      "id": 24,
       "origId": 192,
       "date": "2026-09-03",
       "time": "17:04:32",
@@ -393,7 +542,24 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 22,
+      "id": 25,
+      "origId": 193,
+      "date": "2026-09-04",
+      "time": "07:06:02",
+      "month": "9월",
+      "category": "온라인쇼핑",
+      "subCategory": "결제/충전",
+      "merchant": "업비트 자동 입금",
+      "amount": 10000,
+      "origPay": "듀얼K  입출금통장",
+      "actualCard": "계좌/현금",
+      "installment": "일시불",
+      "billingAmount": 10000,
+      "exclude": "N",
+      "memo": ""
+    },
+    {
+      "id": 26,
       "origId": 194,
       "date": "2026-09-04",
       "time": "10:13:22",
@@ -410,7 +576,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 23,
+      "id": 27,
       "origId": 195,
       "date": "2026-09-04",
       "time": "10:33:15",
@@ -427,7 +593,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 24,
+      "id": 28,
       "origId": 196,
       "date": "2026-09-04",
       "time": "11:40:48",
@@ -444,7 +610,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 25,
+      "id": 29,
       "origId": 197,
       "date": "2026-09-04",
       "time": "15:13:30",
@@ -461,7 +627,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 26,
+      "id": 30,
       "origId": 198,
       "date": "2026-09-04",
       "time": "15:14:37",
@@ -478,7 +644,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 27,
+      "id": 31,
       "origId": 199,
       "date": "2026-09-04",
       "time": "15:39:31",
@@ -495,7 +661,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 28,
+      "id": 32,
       "origId": 200,
       "date": "2026-09-04",
       "time": "19:15:28",
@@ -512,7 +678,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 29,
+      "id": 33,
       "origId": 201,
       "date": "2026-09-05",
       "time": "02:55:24",
@@ -529,7 +695,24 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 30,
+      "id": 34,
+      "origId": 202,
+      "date": "2026-09-05",
+      "time": "07:05:34",
+      "month": "9월",
+      "category": "온라인쇼핑",
+      "subCategory": "결제/충전",
+      "merchant": "업비트 자동 입금",
+      "amount": 10000,
+      "origPay": "듀얼K  입출금통장",
+      "actualCard": "계좌/현금",
+      "installment": "일시불",
+      "billingAmount": 10000,
+      "exclude": "N",
+      "memo": ""
+    },
+    {
+      "id": 35,
       "origId": 203,
       "date": "2026-09-05",
       "time": "14:05:59",
@@ -546,7 +729,24 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 31,
+      "id": 36,
+      "origId": 204,
+      "date": "2026-09-06",
+      "time": "07:06:21",
+      "month": "9월",
+      "category": "온라인쇼핑",
+      "subCategory": "결제/충전",
+      "merchant": "업비트 자동 입금",
+      "amount": 10000,
+      "origPay": "듀얼K  입출금통장",
+      "actualCard": "계좌/현금",
+      "installment": "일시불",
+      "billingAmount": 10000,
+      "exclude": "N",
+      "memo": ""
+    },
+    {
+      "id": 37,
       "origId": 205,
       "date": "2026-09-06",
       "time": "10:41:41",
@@ -563,7 +763,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 32,
+      "id": 38,
       "origId": 206,
       "date": "2026-09-06",
       "time": "14:41:29",
@@ -580,7 +780,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 33,
+      "id": 39,
       "origId": 207,
       "date": "2026-09-06",
       "time": "17:37:55",
@@ -597,7 +797,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 34,
+      "id": 40,
       "origId": 208,
       "date": "2026-09-06",
       "time": "18:51:23",
@@ -614,7 +814,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 35,
+      "id": 41,
       "origId": 209,
       "date": "2026-09-07",
       "time": "00:00:00",
@@ -631,7 +831,24 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 36,
+      "id": 42,
+      "origId": 210,
+      "date": "2026-09-07",
+      "time": "07:05:33",
+      "month": "9월",
+      "category": "온라인쇼핑",
+      "subCategory": "결제/충전",
+      "merchant": "업비트 자동 입금",
+      "amount": 10000,
+      "origPay": "듀얼K  입출금통장",
+      "actualCard": "계좌/현금",
+      "installment": "일시불",
+      "billingAmount": 10000,
+      "exclude": "N",
+      "memo": ""
+    },
+    {
+      "id": 43,
       "origId": 211,
       "date": "2026-09-07",
       "time": "11:32:41",
@@ -648,7 +865,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 37,
+      "id": 44,
       "origId": 212,
       "date": "2026-09-07",
       "time": "13:35:01",
@@ -665,7 +882,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 38,
+      "id": 45,
       "origId": 213,
       "date": "2026-09-07",
       "time": "14:53:54",
@@ -682,7 +899,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 39,
+      "id": 46,
       "origId": 214,
       "date": "2026-09-07",
       "time": "15:50:59",
@@ -699,7 +916,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 40,
+      "id": 47,
       "origId": 215,
       "date": "2026-09-07",
       "time": "18:49:51",
@@ -716,7 +933,24 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 41,
+      "id": 48,
+      "origId": 216,
+      "date": "2026-09-08",
+      "time": "07:05:36",
+      "month": "9월",
+      "category": "온라인쇼핑",
+      "subCategory": "결제/충전",
+      "merchant": "업비트 자동 입금",
+      "amount": 10000,
+      "origPay": "듀얼K  입출금통장",
+      "actualCard": "계좌/현금",
+      "installment": "일시불",
+      "billingAmount": 10000,
+      "exclude": "N",
+      "memo": ""
+    },
+    {
+      "id": 49,
       "origId": 217,
       "date": "2026-09-08",
       "time": "11:37:49",
@@ -733,7 +967,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 42,
+      "id": 50,
       "origId": 218,
       "date": "2026-09-08",
       "time": "11:38:09",
@@ -750,7 +984,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 43,
+      "id": 51,
       "origId": 219,
       "date": "2026-09-08",
       "time": "17:08:03",
@@ -767,7 +1001,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 44,
+      "id": 52,
       "origId": 220,
       "date": "2026-09-08",
       "time": "17:08:03",
@@ -784,7 +1018,24 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 45,
+      "id": 53,
+      "origId": 221,
+      "date": "2026-09-09",
+      "time": "07:05:43",
+      "month": "9월",
+      "category": "온라인쇼핑",
+      "subCategory": "결제/충전",
+      "merchant": "업비트 자동 입금",
+      "amount": 10000,
+      "origPay": "듀얼K  입출금통장",
+      "actualCard": "계좌/현금",
+      "installment": "일시불",
+      "billingAmount": 10000,
+      "exclude": "N",
+      "memo": ""
+    },
+    {
+      "id": 54,
       "origId": 222,
       "date": "2026-09-09",
       "time": "11:45:00",
@@ -801,7 +1052,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 46,
+      "id": 55,
       "origId": 223,
       "date": "2026-09-09",
       "time": "12:20:39",
@@ -818,7 +1069,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 47,
+      "id": 56,
       "origId": 224,
       "date": "2026-09-10",
       "time": "00:00:00",
@@ -835,7 +1086,24 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 48,
+      "id": 57,
+      "origId": 225,
+      "date": "2026-09-10",
+      "time": "07:05:43",
+      "month": "9월",
+      "category": "온라인쇼핑",
+      "subCategory": "결제/충전",
+      "merchant": "업비트 자동 입금",
+      "amount": 10000,
+      "origPay": "듀얼K  입출금통장",
+      "actualCard": "계좌/현금",
+      "installment": "일시불",
+      "billingAmount": 10000,
+      "exclude": "N",
+      "memo": ""
+    },
+    {
+      "id": 58,
       "origId": 226,
       "date": "2026-09-10",
       "time": "11:14:04",
@@ -852,7 +1120,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 49,
+      "id": 59,
       "origId": 227,
       "date": "2026-09-10",
       "time": "11:37:30",
@@ -869,7 +1137,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 50,
+      "id": 60,
       "origId": 228,
       "date": "2026-09-10",
       "time": "12:30:07",
@@ -886,7 +1154,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 51,
+      "id": 61,
       "origId": 229,
       "date": "2026-09-10",
       "time": "16:59:53",
@@ -903,7 +1171,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 52,
+      "id": 62,
       "origId": 230,
       "date": "2026-09-10",
       "time": "17:33:09",
@@ -920,7 +1188,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 53,
+      "id": 63,
       "origId": 231,
       "date": "2026-09-10",
       "time": "17:40:18",
@@ -937,7 +1205,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 54,
+      "id": 64,
       "origId": 232,
       "date": "2026-09-10",
       "time": "17:41:32",
@@ -954,7 +1222,7 @@ window.INITIAL_DATA = {
       "memo": ""
     },
     {
-      "id": 55,
+      "id": 65,
       "origId": 233,
       "date": "2026-09-10",
       "time": "23:40:06",
