@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>카드별 지출 현황 & 가계부 대시보드</title>
+  <meta name="description" content="뱅크샐러드 엑셀 데이터 기반 카드별 실질 지출 분석, 간편결제 매핑, 할부 및 제외 관리 프리미엄 가계부 대시보드">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  
+  <!-- Chart.js & SheetJS -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- App Wrapper -->
+  <div class="app-layout">
+    
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-badge">
+          <span class="logo-icon">💳</span>
+        </div>
+        <div class="title-group">
+          <div class="title-row">
+            <h1>카드별 지출 현황 및 가계부</h1>
+            <span class="badge-tag live-badge">실시간 연동</span>
+          </div>
+          <p class="subtitle">뱅크샐러드 데이터 기반 (2026.09.01 ~ 2026.09.10) · 10일간 지출 분석 및 실시간 카드 재집계</p>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- Action Buttons -->
+        <button id="btnNewTransaction" class="btn btn-primary" title="새로운 지출 내역을 추가합니다">
+          <span class="btn-icon">+</span> 새 지출 추가
+        </button>
+        <button id="btnExportExcel" class="btn btn-secondary" title="현재 수정된 내역을 엑셀로 다운로드합니다">
+          <span class="btn-icon">📥</span> 엑셀 내보내기
+        </button>
+        <label for="excelFileInput" class="btn btn-secondary file-upload-btn" title="엑셀 파일을 불러옵니다">
+          <span class="btn-icon">📤</span> 엑셀 업로드
+          <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display:none;">
+        </label>
+        <button id="btnResetData" class="btn btn-ghost" title="원본 엑셀 데이터(9.1~9.10)로 초기화합니다">
+          <span class="btn-icon">🔄</span> 초기화
+        </button>
+        <button id="btnThemeToggle" class="btn btn-icon-only" title="다크/라이트 테마 변경" aria-label="테마 변경">
+          <span id="themeIcon">☀️</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="app-main">
+      
+      <!-- Period Info & Quick Filters -->
+      <section class="period-bar">
+        <div class="period-info">
+          <span id="periodDateRange">기간: 2026.09.01 ~ 2026.09.10 (10일간)</span>
+          <span class="divider">|</span>
+          <span id="periodTxCount">총 55건의 지출 내역</span>
+        </div>
+      </section>
+
+      <!-- KPI Summary Cards -->
+      <section class="kpi-grid">
+        <!-- KPI 1: 총 지출 -->
+        <div class="kpi-card highlight-card">
+          <div class="kpi-header">
+            <span class="kpi-label">총 월 지출액 (유효)</span>
+            <span class="kpi-icon-pill">💰</span>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-value" id="kpiTotalAmount">0</span>
+            <span class="kpi-unit">원</span>
+          </div>
+          <div class="kpi-footer">
+            <span class="kpi-subtext" id="kpiTxCount">261건 기록됨</span>
+            <span class="kpi-badge positive" id="kpiDailyAvg">일평균 224,349원</span>
+          </div>
+        </div>
+
+        <!-- KPI 2: 실물 카드 지출 -->
+        <div class="kpi-card card-accent-blue">
+          <div class="kpi-header">
+            <span class="kpi-label">실물 신용/체크카드 지출</span>
+            <span class="kpi-icon-pill">💳</span>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-value" id="kpiCardAmount">0</span>
+            <span class="kpi-unit">원</span>
+          </div>
+          <div class="kpi-footer">
+            <div class="progress-bar-container">
+              <div class="progress-fill blue-fill" id="kpiCardRatioBar" style="width: 0%;"></div>
+            </div>
+            <span class="kpi-subtext" id="kpiCardRatioText">비중 0%</span>
+          </div>
+        </div>
+
+        <!-- KPI 3: 간편결제 / 계좌 잔여액 -->
+        <div class="kpi-card card-accent-orange">
+          <div class="kpi-header">
+            <span class="kpi-label">간편결제 / 계좌 지출</span>
+            <span class="kpi-icon-pill">📱</span>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-value" id="kpiPayAmount">0</span>
+            <span class="kpi-unit">원</span>
+          </div>
+          <div class="kpi-footer">
+            <span class="kpi-subtext" id="kpiPayCount">미매핑 간편결제 0건</span>
+            <button id="btnFilterUnmapped" class="kpi-mini-btn" title="간편결제 항목만 즉시 필터링">매핑하기 &rarr;</button>
+          </div>
+        </div>
+
+        <!-- KPI 4: 이번달 청구 예상액 (할부 분할 반영) -->
+        <div class="kpi-card card-accent-green">
+          <div class="kpi-header">
+            <span class="kpi-label">청구 기준 금액 (할부반영)</span>
+            <span class="kpi-icon-pill">📑</span>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-value" id="kpiBillingAmount">0</span>
+            <span class="kpi-unit">원</span>
+          </div>
+          <div class="kpi-footer">
+            <span class="kpi-subtext" id="kpiInstallmentCount">할부 설정 0건</span>
+            <span class="kpi-badge info">1/N 분할 계산</span>
+          </div>
+        </div>
+
+        <!-- KPI 5: 제외 설정 내역 -->
+        <div class="kpi-card card-accent-purple">
+          <div class="kpi-header">
+            <span class="kpi-label">통계 제외(Y) 항목</span>
+            <span class="kpi-icon-pill">🚫</span>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-value" id="kpiExcludedAmount">0</span>
+            <span class="kpi-unit">원</span>
+          </div>
+          <div class="kpi-footer">
+            <span class="kpi-subtext" id="kpiExcludedCount">0건 제외 중</span>
+            <button id="btnFilterExcluded" class="kpi-mini-btn" title="제외된 항목만 모아보기">제외 목록</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Smart Tip & Mapping Banner -->
+      <section id="mappingNoticeBanner" class="smart-banner">
+        <div class="banner-content">
+          <span class="banner-icon">💡</span>
+          <div class="banner-text">
+            <strong>간편결제 카드 매핑 안내:</strong>
+            <span id="unmappedBannerText">네이버페이, 카카오페이 등으로 결제된 내역의 '실제 결제카드'를 지정하면 카드별 혜택 실적이 실시간 갱신됩니다.</span>
+          </div>
+        </div>
+        <div class="banner-actions">
+          <button id="btnBannerFilter" class="btn btn-sm btn-accent">간편결제 내역 모아보기</button>
+        </div>
+      </section>
+
+      <!-- Section: Visual Analytics & Card Breakdown -->
+      <div class="dashboard-split-layout">
+        
+        <!-- Left: Card Performance Breakdown -->
+        <section class="panel card-performance-panel">
+          <div class="panel-header">
+            <div class="panel-title-group">
+              <h3>💳 카드별 실질 지출 현황</h3>
+              <p>간편결제 수정 시 실시간 자동 반영되는 실적 집계표</p>
+            </div>
+            <div class="panel-badge" id="cardSubtotalBadge">합계 0원</div>
+          </div>
+
+          <!-- Physical Cards List -->
+          <div class="cards-status-container" id="physicalCardsContainer">
+            <!-- Dynamically populated card items -->
+          </div>
+
+          <!-- Unmapped / Accounts Toggle & List -->
+          <div class="accounts-section-header">
+            <h4>📱 간편결제 잔여액 및 계좌 지출</h4>
+            <span class="accounts-subtotal" id="paySubtotalBadge">0원</span>
+          </div>
+          <div class="accounts-status-container" id="payAccountsContainer">
+            <!-- Dynamically populated pay items -->
+          </div>
+        </section>
+
+        <!-- Right: Charts & Visual Insights -->
+        <section class="panel charts-panel">
+          <div class="panel-header">
+            <div class="panel-title-group">
+              <h3>📊 지출 시각화 분석</h3>
+              <p>카테고리 및 카드 점유율 실시간 차트</p>
+            </div>
+            <div class="chart-tab-group">
+              <button class="chart-tab-btn active" data-chart-tab="cards">카드 비중</button>
+              <button class="chart-tab-btn" data-chart-tab="categories">카테고리</button>
+              <button class="chart-tab-btn" data-chart-tab="trends">누적 추이</button>
+              <button class="chart-tab-btn" data-chart-tab="daily">일자별 비교</button>
+            </div>
+          </div>
+
+          <!-- Chart Views Container -->
+          <div class="chart-display-area">
+            <!-- View 1: Card Share Doughnut -->
+            <div class="chart-view active" id="chartViewCards">
+              <div class="chart-canvas-box doughnut-box">
+                <canvas id="cardDoughnutChart"></canvas>
+              </div>
+              <div class="chart-legend-custom" id="cardCustomLegend"></div>
+            </div>
+
+            <!-- View 2: Category Bar Chart -->
+            <div class="chart-view" id="chartViewCategories">
+              <div class="chart-canvas-box bar-box">
+                <canvas id="categoryBarChart"></canvas>
+              </div>
+            </div>
+
+            <!-- View 3: Daily Spend Trend -->
+            <div class="chart-view" id="chartViewTrends">
+              <div class="chart-canvas-box line-box">
+                <canvas id="trendLineChart"></canvas>
+              </div>
+            </div>
+
+            <!-- View 4: Daily Comparison -->
+            <div class="chart-view" id="chartViewDaily">
+              <div class="chart-canvas-box bar-box">
+                <canvas id="dailyBarChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- Section: Detailed Transactions Table -->
+      <section class="panel table-panel">
+        <div class="panel-header table-panel-header">
+          <div class="panel-title-group">
+            <h3>📑 지출 상세 내역 관리 (실시간 수정)</h3>
+            <p>드롭다운에서 결제카드를 변경하거나 제외(Y/N) 설정 시 대시보드에 즉시 실시간 반영됩니다.</p>
+          </div>
+          <div class="table-stats-summary">
+            <span id="filteredCountBadge">261건 중 261건 표시</span>
+            <span class="divider">|</span>
+            <span id="filteredSumBadge">합계: 10,544,401원</span>
+          </div>
+        </div>
+
+        <!-- Filter & Search Controls Bar -->
+        <div class="table-controls-bar">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" placeholder="가맹점명, 메모, 원본결제수단 검색..." autocomplete="off">
+            <button id="btnClearSearch" class="btn-clear-search" style="display:none;">&times;</button>
+          </div>
+
+          <div class="filter-dropdowns">
+            <!-- Filter Card -->
+            <div class="select-wrapper">
+              <label for="filterCard">카드/수단</label>
+              <select id="filterCard">
+                <option value="ALL">모든 결제수단</option>
+                <option value="UNMAPPED" id="optUnmappedAll">⚡ 간편결제/계좌 전체 (미매핑)</option>
+                <optgroup label="💳 실물 카드" id="optgroupPhysical"></optgroup>
+                <optgroup label="📱 간편결제/계좌 (개별)" id="optgroupPay"></optgroup>
+              </select>
+            </div>
+
+            <!-- Filter Category -->
+            <div class="select-wrapper">
+              <label for="filterCategory">대분류</label>
+              <select id="filterCategory">
+                <option value="ALL">모든 카테고리</option>
+              </select>
+            </div>
+
+            <!-- Filter Exclude -->
+            <div class="select-wrapper">
+              <label for="filterExclude">포함/제외</label>
+              <select id="filterExclude">
+                <option value="ALL">전체 내역</option>
+                <option value="N">포함 항목만 (N)</option>
+                <option value="Y">제외 항목만 (Y)</option>
+              </select>
+            </div>
+
+            <!-- Filter Installment -->
+            <div class="select-wrapper">
+              <label for="filterInstallment">할부 여부</label>
+              <select id="filterInstallment">
+                <option value="ALL">전체 (일시불+할부)</option>
+                <option value="일시불">일시불만</option>
+                <option value="할부">할부 건만</option>
+              </select>
+            </div>
+
+            <!-- Reset Filters -->
+            <button id="btnResetFilters" class="btn btn-sm btn-ghost" title="모든 필터 조건 초기화">
+              필터 초기화
+            </button>
+          </div>
+        </div>
+
+        <!-- Transactions Table Wrapper -->
+        <div class="table-responsive">
+          <table class="tx-table" id="txTable">
+            <thead>
+              <tr>
+                <th class="col-id" data-sort="id">No. <span class="sort-indicator">↕</span></th>
+                <th class="col-date" data-sort="date">날짜/시간 <span class="sort-indicator">↕</span></th>
+                <th class="col-cat" data-sort="category">분류 <span class="sort-indicator">↕</span></th>
+                <th class="col-merchant" data-sort="merchant">내용 (가맹점) <span class="sort-indicator">↕</span></th>
+                <th class="col-amt" data-sort="amount">지출금액 <span class="sort-indicator">↕</span></th>
+                <th class="col-orig">원본 결제수단</th>
+                <th class="col-actual">실제 결제카드 (수정 가능) ✏️</th>
+                <th class="col-inst">할부</th>
+                <th class="col-bill">청구액</th>
+                <th class="col-exclude">제외</th>
+                <th class="col-memo">메모</th>
+                <th class="col-action">관리</th>
+              </tr>
+            </thead>
+            <tbody id="txTableBody">
+              <!-- Dynamically populated table rows -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Table Pagination & Page Size -->
+        <div class="table-footer">
+          <div class="page-size-selector">
+            <span>페이지당 표시:</span>
+            <select id="pageSizeSelect">
+              <option value="15">15개</option>
+              <option value="30" selected>30개</option>
+              <option value="50">50개</option>
+              <option value="100">100개</option>
+              <option value="9999">전체 보기</option>
+            </select>
+          </div>
+
+          <div class="pagination-controls" id="paginationControls">
+            <!-- Dynamically generated pagination -->
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- App Footer -->
+    <footer class="app-footer">
+      <div class="footer-left">
+        <span>✨ 가계부 & 카드별 지출 대시보드 v1.0</span>
+        <span class="divider">·</span>
+        <span>허계원 고객님 맞춤형 재무 분석</span>
+      </div>
+      <div class="footer-right">
+        <span>데이터는 브라우저 로컬 저장소(LocalStorage)에 안전하게 실시간 보관됩니다.</span>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Modal: Add New Transaction -->
+  <div id="newTxModal" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>➕ 새 지출 내역 등록</h3>
+        <button id="btnCloseModal" class="btn-close-modal">&times;</button>
+      </div>
+      <form id="newTxForm" class="modal-form">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="newDate">날짜 *</label>
+            <input type="date" id="newDate" required>
+          </div>
+          <div class="form-group">
+            <label for="newTime">시간</label>
+            <input type="time" id="newTime" value="12:00:00" step="1">
+          </div>
+          <div class="form-group">
+            <label for="newCategory">대분류 *</label>
+            <input type="text" id="newCategory" placeholder="식비, 생활, 쇼핑 등" required list="categoryDataList">
+            <datalist id="categoryDataList"></datalist>
+          </div>
+          <div class="form-group">
+            <label for="newSubCategory">소분류</label>
+            <input type="text" id="newSubCategory" placeholder="카페, 마트 등">
+          </div>
+          <div class="form-group form-span-2">
+            <label for="newMerchant">가맹점명(내용) *</label>
+            <input type="text" id="newMerchant" placeholder="상호명 입력" required>
+          </div>
+          <div class="form-group">
+            <label for="newAmount">지출금액 (원) *</label>
+            <input type="number" id="newAmount" placeholder="금액 입력" min="1" required>
+          </div>
+          <div class="form-group">
+            <label for="newOrigPay">원본 결제수단</label>
+            <input type="text" id="newOrigPay" placeholder="예: 네이버페이, 신한카드">
+          </div>
+          <div class="form-group">
+            <label for="newActualCard">실제 결제카드 *</label>
+            <select id="newActualCard" required></select>
+          </div>
+          <div class="form-group">
+            <label for="newInstallment">할부 개월</label>
+            <select id="newInstallment">
+              <option value="일시불">일시불</option>
+              <option value="2개월">2개월</option>
+              <option value="3개월">3개월</option>
+              <option value="4개월">4개월</option>
+              <option value="5개월">5개월</option>
+              <option value="6개월">6개월</option>
+              <option value="12개월">12개월</option>
+            </select>
+          </div>
+          <div class="form-group form-span-2">
+            <label for="newMemo">메모</label>
+            <input type="text" id="newMemo" placeholder="특이사항, 메모">
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" id="btnCancelModal" class="btn btn-secondary">취소</button>
+          <button type="submit" class="btn btn-primary">등록하기</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
