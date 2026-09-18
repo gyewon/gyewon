@@ -11,19 +11,19 @@
   const THEME_KEY = 'gyewon_theme_mode';
 
   const CARD_CONFIG = {
-    '신한은행 The More': { color: '#2563eb', chip: '#1d4ed8', target: 500000, type: 'physical' },
-    'KT Plus 우리카드': { color: '#0284c7', chip: '#0369a1', target: 400000, type: 'physical' },
-    'MG+ S 하나카드': { color: '#0d9488', chip: '#0f766e', target: 500000, type: 'physical' },
-    'KB국민 톡톡 my point카드': { color: '#d97706', chip: '#b45309', target: 300000, type: 'physical' },
-    '신한 복지 다드림 LOVE': { color: '#e11d48', chip: '#be123c', target: 300000, type: 'physical' },
-    '아시아나 KB국민플래티늄카드': { color: '#7c3aed', chip: '#6d28d9', target: 1000000, type: 'physical' },
+    '신한은행 The More': { color: '#3b82f6', chip: '#2563eb', target: 500000, type: 'physical' },
+    'KT Plus 우리카드': { color: '#06b6d4', chip: '#0891b2', target: 400000, type: 'physical' },
+    'MG+ S 하나카드': { color: '#ec4899', chip: '#db2777', target: 500000, type: 'physical' }, // Pink
+    'KB국민 톡톡 my point카드': { color: '#f59e0b', chip: '#d97706', target: 300000, type: 'physical' },
+    '신한 복지 다드림 LOVE': { color: '#ef4444', chip: '#dc2626', target: 300000, type: 'physical' },
+    '아시아나 KB국민플래티늄카드': { color: '#8b5cf6', chip: '#7c3aed', target: 1000000, type: 'physical' },
     '기타 카드': { color: '#64748b', chip: '#475569', target: 0, type: 'physical' },
 
-    '[간편결제] 네이버페이': { color: '#059669', dot: '#10b981', type: 'pay' },
-    '[간편결제] 네이버페이(포인트)': { color: '#10b981', dot: '#34d399', type: 'pay' },
-    '[간편결제] 카카오페이': { color: '#f59e0b', dot: '#fbbf24', type: 'pay' },
-    '[간편결제] 페이코': { color: '#dc2626', dot: '#f87171', type: 'pay' },
-    '[간편결제] 토스': { color: '#3b82f6', dot: '#60a5fa', type: 'pay' },
+    '[간편결제] 네이버페이': { color: '#03c75a', dot: '#02b351', type: 'pay' }, // Naver Green
+    '[간편결제] 네이버페이(포인트)': { color: '#4ade80', dot: '#22c55e', type: 'pay' },
+    '[간편결제] 카카오페이': { color: '#eab308', dot: '#ca8a04', type: 'pay' },
+    '[간편결제] 페이코': { color: '#f43f5e', dot: '#e11d48', type: 'pay' },
+    '[간편결제] 토스': { color: '#3b82f6', dot: '#2563eb', type: 'pay' },
     '계좌/현금': { color: '#475569', dot: '#94a3b8', type: 'pay' }
   };
 
