@@ -1015,6 +1015,16 @@ body {
   text-decoration: line-through;
 }
 
+.is-canceled {
+  opacity: 0.45;
+  background: rgba(148, 163, 184, 0.05) !important;
+}
+.is-canceled td.col-merchant,
+.is-canceled td.col-amt {
+  text-decoration: line-through;
+  color: var(--text-muted) !important;
+}
+
 /* Table Columns */
 .col-id { width: 50px; text-align: center; color: var(--text-muted); font-size: 0.82rem; }
 .col-date { width: 105px; white-space: nowrap; font-size: 0.82rem; color: #e2e8f0; }

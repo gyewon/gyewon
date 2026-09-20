@@ -11,6 +11,7 @@
   const THEME_KEY = 'gyewon_theme_mode';
   const RULES_STORAGE_KEY = 'gyewon_category_rules_v1';
   const MASTER_CAT_STORAGE_KEY = 'gyewon_master_categories_v1';
+  const DELETED_RECORDS_KEY = 'gyewon_deleted_records_v1';
 
   const DEFAULT_MASTER_CATEGORIES = {
     "식비": ["외식", "배달", "카페/간식", "식재료/마트"],
@@ -52,6 +53,7 @@
     records: [],
     categoryRules: [],
     masterCategories: {},
+    deletedSignatures: new Set(),
     activeManageMainCat: null,
     searchQuery: '',
     filterCard: 'ALL',
@@ -74,6 +76,38 @@
   };
 
   // --- Helper Functions ---
+  function getSignature(r) {
+    return `${r.date}|${r.time || ''}|${r.merchant}|${r.amount}`;
+  }
+
+  function identifyCanceledPairs(recordsList) {
+    recordsList.forEach(r => r.isCanceled = false);
+    const groups = {};
+    recordsList.forEach(r => {
+      const key = `${r.date}|${r.merchant}`;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(r);
+    });
+
+    for (const key in groups) {
+      const group = groups[key];
+      const matched = new Set();
+      for (let i = 0; i < group.length; i++) {
+        if (matched.has(i)) continue;
+        for (let j = i + 1; j < group.length; j++) {
+          if (matched.has(j)) continue;
+          if (group[i].amount === -group[j].amount && group[i].amount !== 0) {
+            group[i].isCanceled = true;
+            group[j].isCanceled = true;
+            matched.add(i);
+            matched.add(j);
+            break;
+          }
+        }
+      }
+    }
+  }
+
   function formatCurrency(val) {
     return (Number(val) || 0).toLocaleString('ko-KR');
   }
@@ -108,11 +142,17 @@
 
   function loadData() {
     try {
+      const savedDeleted = localStorage.getItem(DELETED_RECORDS_KEY);
+      if (savedDeleted) {
+        appState.deletedSignatures = new Set(JSON.parse(savedDeleted));
+      }
+
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         appState.records = JSON.parse(saved);
       } else if (window.INITIAL_DATA && window.INITIAL_DATA.records) {
-        appState.records = JSON.parse(JSON.stringify(window.INITIAL_DATA.records));
+        let initialRecs = JSON.parse(JSON.stringify(window.INITIAL_DATA.records));
+        appState.records = initialRecs.filter(r => !appState.deletedSignatures.has(getSignature(r)));
         saveData();
       }
       const beforeCount = appState.records.length;
@@ -369,6 +409,7 @@
 
   // --- Render All Dashboard Elements ---
   function renderAll() {
+    identifyCanceledPairs(appState.records);
     renderKPIs();
     renderCardsBreakdown();
     updateCharts(getFilteredRecords(true));
@@ -952,9 +993,10 @@
     pageRecords.forEach(rec => {
       const isExcluded = rec.exclude === 'Y';
       const isUnmapped = !CARD_CONFIG[rec.actualCard] || CARD_CONFIG[rec.actualCard].type !== 'physical';
+      const isCanceledClass = rec.isCanceled ? 'is-canceled' : '';
 
       const tr = document.createElement('tr');
-      tr.className = isExcluded ? 'tx-row-excluded' : '';
+      tr.className = `${isExcluded ? 'tx-row-excluded' : ''} ${isCanceledClass}`.trim();
       tr.dataset.id = rec.id;
 
       // Card Select Options
@@ -1176,6 +1218,11 @@
     if (target.closest('.btn-delete-row')) {
       const id = Number(target.closest('.btn-delete-row').dataset.id);
       if (confirm(`No. ${id} 지출 내역을 완전히 삭제하시겠습니까?`)) {
+        const rec = appState.records.find(r => r.id === id);
+        if (rec) {
+          appState.deletedSignatures.add(getSignature(rec));
+          localStorage.setItem(DELETED_RECORDS_KEY, JSON.stringify(Array.from(appState.deletedSignatures)));
+        }
         appState.records = appState.records.filter(r => r.id !== id);
         saveData();
         renderAll();
@@ -1455,14 +1502,16 @@
 
     // Reset Data to Initial
     document.getElementById('btnResetData')?.addEventListener('click', () => {
-      if (confirm('모든 수정사항을 취소하고 원본 엑셀 데이터(261건)로 초기화하시겠습니까?')) {
+      if (confirm('모든 수정사항을 취소하고 원본 엑셀 데이터(261건)로 초기화하시겠습니까? (삭제된 내역 기록도 초기화됩니다)')) {
         localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(DELETED_RECORDS_KEY);
+        appState.deletedSignatures.clear();
         if (window.INITIAL_DATA) {
           appState.records = JSON.parse(JSON.stringify(window.INITIAL_DATA.records));
           saveData();
         }
         renderAll();
-        showToast('원본 엑셀 데이터로 완전히 초기화되었습니다.', 'info');
+        showToast('원본 엑셀 데이터 및 삭제 기록이 초기화되었습니다.', 'info');
       }
     });
 
