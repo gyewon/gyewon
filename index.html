@@ -47,6 +47,12 @@
 
       <div class="header-right">
         <!-- Action Buttons -->
+        <button id="btnManageCategories" class="btn btn-secondary" title="대분류와 소분류 목록을 관리합니다">
+          <span class="btn-icon">📑</span> 분류 관리
+        </button>
+        <button id="btnCategoryRules" class="btn btn-secondary" title="자동 카테고리 분류 규칙을 설정합니다">
+          <span class="btn-icon">⚙️</span> 규칙 설정
+        </button>
         <button id="btnNewTransaction" class="btn btn-primary" title="새로운 지출 내역을 추가합니다">
           <span class="btn-icon">+</span> 새 지출 추가
         </button>
@@ -404,12 +410,15 @@
           </div>
           <div class="form-group">
             <label for="newCategory">대분류 *</label>
-            <input type="text" id="newCategory" placeholder="식비, 생활, 쇼핑 등" required list="categoryDataList">
-            <datalist id="categoryDataList"></datalist>
+            <select id="newCategory" required>
+              <option value="">대분류 선택</option>
+            </select>
           </div>
           <div class="form-group">
             <label for="newSubCategory">소분류</label>
-            <input type="text" id="newSubCategory" placeholder="카페, 마트 등">
+            <select id="newSubCategory">
+              <option value="">소분류 선택</option>
+            </select>
           </div>
           <div class="form-group form-span-2">
             <label for="newMerchant">가맹점명(내용) *</label>
@@ -450,6 +459,92 @@
           <button type="submit" class="btn btn-primary">등록하기</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal: Category Rules -->
+  <div id="categoryRulesModal" class="modal-backdrop">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-header">
+        <h3>⚙️ 카테고리 자동 분류 규칙 설정</h3>
+        <button id="btnCloseRulesModal" class="btn-close-modal">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <p style="margin-bottom: 16px; color: var(--text-muted); font-size: 0.9rem;">
+          가맹점명에 특정 키워드가 포함되어 있으면 자동으로 지정된 카테고리로 변경합니다. (예: '스타벅스' &rarr; '카페/간식')
+        </p>
+        
+        <form id="newRuleForm" style="display: flex; gap: 8px; margin-bottom: 20px;">
+          <input type="text" id="ruleKeyword" placeholder="키워드 (예: 쿠팡)" required style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-main);">
+          <select id="ruleCategory" required style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-main);">
+            <option value="">대분류 선택</option>
+          </select>
+          <select id="ruleSubCategory" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-main);">
+            <option value="">소분류 선택</option>
+          </select>
+          <button type="submit" class="btn btn-primary" style="white-space: nowrap;">추가</button>
+        </form>
+
+        <div style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px;">
+          <table class="tx-table">
+            <thead>
+              <tr>
+                <th style="padding: 12px; text-align: left;">가맹점 키워드</th>
+                <th style="padding: 12px; text-align: left;">변경될 대분류</th>
+                <th style="padding: 12px; text-align: left;">변경될 소분류</th>
+                <th style="padding: 12px; text-align: center; width: 60px;">관리</th>
+              </tr>
+            </thead>
+            <tbody id="rulesTableBody">
+              <!-- Rules will be dynamically populated here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="btnApplyRulesNow" class="btn btn-secondary" title="현재 등록된 모든 내역에 규칙을 즉시 적용합니다">현재 내역에 즉시 적용</button>
+        <button type="button" id="btnDoneRulesModal" class="btn btn-primary">확인 (닫기)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Category Manage -->
+  <div id="categoryManageModal" class="modal-backdrop">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-header">
+        <h3>📑 대분류 / 소분류 마스터 관리</h3>
+        <button id="btnCloseCategoryManageModal" class="btn-close-modal">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 20px; display: flex; gap: 20px; max-height: 600px;">
+        
+        <!-- 대분류 영역 -->
+        <div style="flex: 1; display: flex; flex-direction: column; border-right: 1px solid var(--border-color); padding-right: 20px;">
+          <h4 style="margin-bottom: 12px;">대분류 목록</h4>
+          <form id="newMainCategoryForm" style="display: flex; gap: 8px; margin-bottom: 12px;">
+            <input type="text" id="newMainCategoryName" placeholder="새 대분류 이름" required style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-primary);">
+            <button type="submit" class="btn btn-primary btn-sm">추가</button>
+          </form>
+          <div id="mainCategoryList" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 4px;">
+            <!-- 대분류 아이템 렌더링 -->
+          </div>
+        </div>
+
+        <!-- 소분류 영역 -->
+        <div style="flex: 1; display: flex; flex-direction: column;">
+          <h4 style="margin-bottom: 12px;">소분류 목록 <small id="selectedMainCategoryText" style="color: var(--primary); font-weight: normal;"></small></h4>
+          <form id="newSubCategoryForm" style="display: flex; gap: 8px; margin-bottom: 12px;">
+            <input type="text" id="newSubCategoryName" placeholder="선택한 대분류의 새 소분류" required style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-primary);">
+            <button type="submit" class="btn btn-primary btn-sm">추가</button>
+          </form>
+          <div id="subCategoryList" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 4px;">
+            <div style="color: var(--text-muted); font-size: 0.9rem; text-align: center; margin-top: 20px;">대분류를 먼저 선택해주세요.</div>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="btnDoneCategoryManageModal" class="btn btn-primary">확인 (닫기)</button>
+      </div>
     </div>
   </div>
 

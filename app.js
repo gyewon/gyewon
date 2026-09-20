@@ -9,6 +9,20 @@
   // --- Constants & Brand Configuration ---
   const STORAGE_KEY = 'gyewon_household_tx_sep01_10_v4';
   const THEME_KEY = 'gyewon_theme_mode';
+  const RULES_STORAGE_KEY = 'gyewon_category_rules_v1';
+  const MASTER_CAT_STORAGE_KEY = 'gyewon_master_categories_v1';
+
+  const DEFAULT_MASTER_CATEGORIES = {
+    "식비": ["외식", "배달", "카페/간식", "식재료/마트"],
+    "교통/차량": ["대중교통", "택시", "주유", "정비"],
+    "주거/통신": ["월세/관리비", "통신비", "가스/전기/수도"],
+    "쇼핑": ["온라인쇼핑", "의류/잡화", "가전/가구", "편의점"],
+    "문화/여가": ["영화/공연", "게임", "여행", "도서"],
+    "건강/의료": ["병원/약국", "운동", "영양제"],
+    "미용/패션": ["헤어/뷰티", "화장품"],
+    "경조사/회비": ["축의금", "조의금", "모임/회비"],
+    "기타": ["미분류", "현금찾기", "기타지출"]
+  };
 
   const CARD_CONFIG = {
     '신한은행 The More': { color: '#3b82f6', chip: '#2563eb', target: 500000, type: 'physical' },
@@ -36,6 +50,9 @@
   // --- State ---
   let appState = {
     records: [],
+    categoryRules: [],
+    masterCategories: {},
+    activeManageMainCat: null,
     searchQuery: '',
     filterCard: 'ALL',
     filterCategory: 'ALL',
@@ -98,11 +115,23 @@
         appState.records = JSON.parse(JSON.stringify(window.INITIAL_DATA.records));
         saveData();
       }
-      // Ensure Upbit automatic deposit records are completely purged
       const beforeCount = appState.records.length;
       appState.records = appState.records.filter(r => !(r.merchant && r.merchant.includes('업비트')));
       if (appState.records.length !== beforeCount) {
         saveData();
+      }
+
+      const savedRules = localStorage.getItem(RULES_STORAGE_KEY);
+      if (savedRules) {
+        appState.categoryRules = JSON.parse(savedRules);
+      }
+
+      const savedMasterCats = localStorage.getItem(MASTER_CAT_STORAGE_KEY);
+      if (savedMasterCats) {
+        appState.masterCategories = JSON.parse(savedMasterCats);
+      } else {
+        appState.masterCategories = JSON.parse(JSON.stringify(DEFAULT_MASTER_CATEGORIES));
+        saveMasterCategories();
       }
     } catch (e) {
       console.error('Failed to load storage data:', e);
@@ -118,6 +147,45 @@
     } catch (e) {
       console.error('Failed to save to localStorage:', e);
     }
+  }
+
+  function saveRules() {
+    try {
+      localStorage.setItem(RULES_STORAGE_KEY, JSON.stringify(appState.categoryRules));
+    } catch (e) {
+      console.error('Failed to save rules to localStorage:', e);
+    }
+  }
+
+  function saveMasterCategories() {
+    try {
+      localStorage.setItem(MASTER_CAT_STORAGE_KEY, JSON.stringify(appState.masterCategories));
+    } catch (e) {
+      console.error('Failed to save master categories:', e);
+    }
+  }
+
+  function applyCategoryRules(recordsList) {
+    if (appState.categoryRules.length === 0) return false;
+    let changed = false;
+    recordsList.forEach(rec => {
+      const merchant = rec.merchant || '';
+      for (const rule of appState.categoryRules) {
+        if (merchant.includes(rule.keyword)) {
+          if (rec.category !== rule.category || rec.subCategory !== rule.subCategory) {
+            rec.category = rule.category;
+            if (rule.subCategory) {
+              rec.subCategory = rule.subCategory;
+            } else {
+              rec.subCategory = '';
+            }
+            changed = true;
+          }
+          break;
+        }
+      }
+    });
+    return changed;
   }
 
   function initTheme() {
@@ -203,12 +271,48 @@
       });
     }
 
-    if (categoryDataList) {
-      categoryDataList.innerHTML = '';
-      sortedCats.forEach(cat => {
+    populateCategorySelects();
+  }
+
+  function populateCategorySelects() {
+    const mainCats = Object.keys(appState.masterCategories);
+    
+    // For Modals: newCategory, ruleCategory
+    const newMain = document.getElementById('newCategory');
+    const ruleMain = document.getElementById('ruleCategory');
+    
+    [newMain, ruleMain].forEach(selectEl => {
+      if (!selectEl) return;
+      const currentVal = selectEl.value;
+      selectEl.innerHTML = '<option value="">대분류 선택</option>';
+      mainCats.forEach(cat => {
         const opt = document.createElement('option');
         opt.value = cat;
-        categoryDataList.appendChild(opt);
+        opt.textContent = cat;
+        if (cat === currentVal) opt.selected = true;
+        selectEl.appendChild(opt);
+      });
+      // trigger change to update subcategories
+      selectEl.dispatchEvent(new Event('change'));
+    });
+  }
+
+  function updateSubCategoryOptions(mainSelect, subSelectId) {
+    const subSelect = document.getElementById(subSelectId);
+    if (!subSelect) return;
+    
+    const mainCat = mainSelect.value;
+    const currentVal = subSelect.value;
+    
+    subSelect.innerHTML = '<option value="">소분류 선택</option>';
+    
+    if (mainCat && appState.masterCategories[mainCat]) {
+      appState.masterCategories[mainCat].forEach(sub => {
+        const opt = document.createElement('option');
+        opt.value = sub;
+        opt.textContent = sub;
+        if (sub === currentVal) opt.selected = true;
+        subSelect.appendChild(opt);
       });
     }
   }
@@ -867,6 +971,32 @@
         instOptionsHtml += `<option value="${inst}" ${isSelected ? 'selected' : ''}>${inst}</option>`;
       });
 
+      // Category Options for Table Select
+      const mainCats = Object.keys(appState.masterCategories);
+      let catOptionsHtml = '<option value="">대분류</option>';
+      let isValidCat = false;
+      mainCats.forEach(cat => {
+        const isSelected = cat === rec.category;
+        if (isSelected) isValidCat = true;
+        catOptionsHtml += `<option value="${cat}" ${isSelected ? 'selected' : ''}>${cat}</option>`;
+      });
+      if (rec.category && !isValidCat) {
+        catOptionsHtml += `<option value="${rec.category}" selected>${rec.category} (미등록)</option>`;
+      }
+
+      // SubCategory Options for Table Select
+      let subOptionsHtml = '<option value="">소분류</option>';
+      let isValidSub = false;
+      const validSubCats = appState.masterCategories[rec.category] || [];
+      validSubCats.forEach(sub => {
+        const isSelected = sub === rec.subCategory;
+        if (isSelected) isValidSub = true;
+        subOptionsHtml += `<option value="${sub}" ${isSelected ? 'selected' : ''}>${sub}</option>`;
+      });
+      if (rec.subCategory && !isValidSub) {
+        subOptionsHtml += `<option value="${rec.subCategory}" selected>${rec.subCategory} (미등록)</option>`;
+      }
+
       tr.innerHTML = `
         <td class="col-id">${rec.id}</td>
         <td class="col-date">
@@ -874,8 +1004,12 @@
           <small style="color:var(--text-muted); font-size:0.75rem;">${rec.time || ''}</small>
         </td>
         <td class="col-cat">
-          <span class="badge-cat">${rec.category}</span>
-          ${rec.subCategory ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">${rec.subCategory}</div>` : ''}
+          <select class="input-table-category badge-cat-input" data-id="${rec.id}" title="대분류 선택">
+            ${catOptionsHtml}
+          </select>
+          <select class="input-table-subcategory" data-id="${rec.id}" title="소분류 선택">
+            ${subOptionsHtml}
+          </select>
         </td>
         <td class="col-merchant" title="${rec.merchant}">
           ${rec.merchant}
@@ -1079,7 +1213,8 @@
       appState.currentPage = 1;
       renderCardsBreakdown();
       renderTable();
-      showToast('미매핑된 간편결제/계좌 내역 33건을 표시합니다.', 'info');
+      const unmappedCount = appState.records.filter(r => r.exclude !== 'Y' && (!CARD_CONFIG[r.actualCard] || CARD_CONFIG[r.actualCard].type !== 'physical')).length;
+      showToast(`미매핑된 간편결제/계좌 내역 ${unmappedCount}건을 표시합니다.`, 'info');
     });
 
     document.getElementById('btnFilterUnmapped')?.addEventListener('click', () => {
@@ -1088,7 +1223,8 @@
       appState.currentPage = 1;
       renderCardsBreakdown();
       renderTable();
-      showToast('미매핑된 간편결제/계좌 내역 33건을 표시합니다.', 'info');
+      const unmappedCount = appState.records.filter(r => r.exclude !== 'Y' && (!CARD_CONFIG[r.actualCard] || CARD_CONFIG[r.actualCard].type !== 'physical')).length;
+      showToast(`미매핑된 간편결제/계좌 내역 ${unmappedCount}건을 표시합니다.`, 'info');
     });
 
     document.getElementById('btnFilterExcluded')?.addEventListener('click', () => {
@@ -1194,6 +1330,41 @@
     tableBody?.addEventListener('change', handleTableChange);
     tableBody?.addEventListener('click', handleTableClick);
 
+    // Table Inline Edit (Category, SubCategory)
+    tableBody?.addEventListener('change', e => {
+      if (e.target.matches('.input-table-category') || e.target.matches('.input-table-subcategory')) {
+        const id = Number(e.target.dataset.id);
+        const rec = appState.records.find(r => r.id === id);
+        if (rec) {
+          if (e.target.matches('.input-table-category')) {
+            rec.category = e.target.value || '기타';
+            // if main category changes, reset subcategory
+            rec.subCategory = '';
+            
+            // update subcategory dropdown for this specific row
+            const subSelect = e.target.closest('td').querySelector('.input-table-subcategory');
+            if (subSelect) {
+              subSelect.innerHTML = '<option value="">소분류 선택</option>';
+              const subCats = appState.masterCategories[rec.category] || [];
+              subCats.forEach(sub => {
+                const opt = document.createElement('option');
+                opt.value = sub;
+                opt.textContent = sub;
+                subSelect.appendChild(opt);
+              });
+            }
+          } else {
+            rec.subCategory = e.target.value;
+          }
+          saveData();
+          populateFilterDropdowns();
+          renderKPIs();
+          updateCharts(getFilteredRecords(true));
+          showToast(`[#${id}] 카테고리가 변경되었습니다.`);
+        }
+      }
+    });
+
     // Table Memo Inline Edit
     tableBody?.addEventListener('blur', e => {
       if (e.target.matches('.input-table-memo')) {
@@ -1265,6 +1436,7 @@
         memo: memo
       };
 
+      applyCategoryRules([newRecord]);
       appState.records.unshift(newRecord);
       saveData();
       modal.classList.remove('show');
@@ -1296,6 +1468,252 @@
 
     // Export to Excel
     document.getElementById('btnExportExcel')?.addEventListener('click', exportToExcel);
+
+    // Category Rules Modal
+    const rulesModal = document.getElementById('categoryRulesModal');
+    
+    document.getElementById('btnCategoryRules')?.addEventListener('click', () => {
+      renderRulesTable();
+      rulesModal.classList.add('show');
+    });
+
+    document.getElementById('btnCloseRulesModal')?.addEventListener('click', () => rulesModal.classList.remove('show'));
+    document.getElementById('btnDoneRulesModal')?.addEventListener('click', () => rulesModal.classList.remove('show'));
+
+    document.getElementById('newRuleForm')?.addEventListener('submit', e => {
+      e.preventDefault();
+      const keyword = document.getElementById('ruleKeyword').value.trim();
+      const category = document.getElementById('ruleCategory').value.trim();
+      const subCategory = document.getElementById('ruleSubCategory').value.trim();
+      
+      if (!keyword || !category) return;
+      
+      appState.categoryRules.push({ id: Date.now(), keyword, category, subCategory });
+      saveRules();
+      renderRulesTable();
+      e.target.reset();
+      showToast(`'${keyword}' 규칙이 추가되었습니다.`, 'success');
+    });
+
+    document.getElementById('rulesTableBody')?.addEventListener('click', e => {
+      if (e.target.closest('.btn-delete-rule')) {
+        const id = Number(e.target.closest('.btn-delete-rule').dataset.id);
+        appState.categoryRules = appState.categoryRules.filter(r => r.id !== id);
+        saveRules();
+        renderRulesTable();
+        showToast('규칙이 삭제되었습니다.');
+      }
+    });
+
+    document.getElementById('btnApplyRulesNow')?.addEventListener('click', () => {
+      const changed = applyCategoryRules(appState.records);
+      if (changed) {
+        saveData();
+        populateFilterDropdowns();
+        renderAll();
+        showToast('현재 등록된 규칙을 모든 지출 내역에 적용했습니다!', 'success');
+      } else {
+        showToast('적용할 변경 사항이 없습니다.', 'info');
+      }
+    });
+
+    function renderRulesTable() {
+      const tbody = document.getElementById('rulesTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      if (appState.categoryRules.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px; color: var(--text-muted);">등록된 규칙이 없습니다.</td></tr>';
+        return;
+      }
+      appState.categoryRules.forEach(rule => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="padding: 10px;">${rule.keyword}</td>
+          <td style="padding: 10px;"><span class="badge-cat">${rule.category}</span></td>
+          <td style="padding: 10px;">${rule.subCategory || '-'}</td>
+          <td style="padding: 10px; text-align: center;">
+            <button type="button" class="btn-delete-rule" data-id="${rule.id}" title="삭제" style="background:none; border:none; cursor:pointer; font-size:1.2rem; color:var(--text-muted);">🗑️</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Category cascading for Modals
+    document.getElementById('newCategory')?.addEventListener('change', function() {
+      updateSubCategoryOptions(this, 'newSubCategory');
+    });
+    
+    document.getElementById('ruleCategory')?.addEventListener('change', function() {
+      updateSubCategoryOptions(this, 'ruleSubCategory');
+    });
+
+    // Category Manage Modal
+    const manageModal = document.getElementById('categoryManageModal');
+    
+    document.getElementById('btnManageCategories')?.addEventListener('click', () => {
+      appState.activeManageMainCat = null;
+      renderManageMainCategories();
+      renderManageSubCategories();
+      manageModal.classList.add('show');
+    });
+
+    document.getElementById('btnCloseCategoryManageModal')?.addEventListener('click', () => manageModal.classList.remove('show'));
+    document.getElementById('btnDoneCategoryManageModal')?.addEventListener('click', () => manageModal.classList.remove('show'));
+
+    document.getElementById('newMainCategoryForm')?.addEventListener('submit', e => {
+      e.preventDefault();
+      const val = document.getElementById('newMainCategoryName').value.trim();
+      if (!val || appState.masterCategories[val]) {
+        showToast('이미 존재하거나 잘못된 대분류 이름입니다.', 'warn');
+        return;
+      }
+      appState.masterCategories[val] = [];
+      saveMasterCategories();
+      populateFilterDropdowns(); // update dropdowns globally
+      renderTable();
+      renderManageMainCategories();
+      e.target.reset();
+      showToast(`대분류 '${val}'가 추가되었습니다.`, 'success');
+    });
+
+    document.getElementById('newSubCategoryForm')?.addEventListener('submit', e => {
+      e.preventDefault();
+      const mainCat = appState.activeManageMainCat;
+      const val = document.getElementById('newSubCategoryName').value.trim();
+      if (!mainCat || !val || appState.masterCategories[mainCat].includes(val)) {
+        showToast('이미 존재하거나 잘못된 소분류 이름입니다.', 'warn');
+        return;
+      }
+      appState.masterCategories[mainCat].push(val);
+      saveMasterCategories();
+      populateFilterDropdowns();
+      renderTable();
+      renderManageSubCategories();
+      e.target.reset();
+      showToast(`'${mainCat}'에 소분류 '${val}'가 추가되었습니다.`, 'success');
+    });
+
+    document.getElementById('mainCategoryList')?.addEventListener('click', e => {
+      // Select Main Category
+      if (e.target.closest('.main-cat-item') && !e.target.closest('.btn-delete-main-cat')) {
+        const item = e.target.closest('.main-cat-item');
+        appState.activeManageMainCat = item.dataset.cat;
+        document.querySelectorAll('.main-cat-item').forEach(el => el.style.background = 'transparent');
+        item.style.background = 'var(--bg-input)';
+        renderManageSubCategories();
+      }
+      
+      // Delete Main Category
+      if (e.target.closest('.btn-delete-main-cat')) {
+        const cat = e.target.closest('.btn-delete-main-cat').dataset.cat;
+        if (confirm(`대분류 '${cat}'와 속한 모든 소분류를 삭제하시겠습니까? (기존 내역의 데이터는 유지됩니다)`)) {
+          delete appState.masterCategories[cat];
+          if (appState.activeManageMainCat === cat) {
+            appState.activeManageMainCat = null;
+          }
+          saveMasterCategories();
+          populateFilterDropdowns();
+          renderTable();
+          renderManageMainCategories();
+          renderManageSubCategories();
+          showToast(`대분류 '${cat}'가 삭제되었습니다.`);
+        }
+      }
+    });
+
+    document.getElementById('subCategoryList')?.addEventListener('click', e => {
+      if (e.target.closest('.btn-delete-sub-cat')) {
+        const sub = e.target.closest('.btn-delete-sub-cat').dataset.sub;
+        const mainCat = appState.activeManageMainCat;
+        if (mainCat && appState.masterCategories[mainCat]) {
+          appState.masterCategories[mainCat] = appState.masterCategories[mainCat].filter(s => s !== sub);
+          saveMasterCategories();
+          populateFilterDropdowns();
+          renderTable();
+          renderManageSubCategories();
+          showToast(`소분류 '${sub}'가 삭제되었습니다.`);
+        }
+      }
+    });
+
+    function renderManageMainCategories() {
+      const container = document.getElementById('mainCategoryList');
+      if (!container) return;
+      container.innerHTML = '';
+      const mainCats = Object.keys(appState.masterCategories);
+      if (mainCats.length === 0) {
+        container.innerHTML = '<div style="color:var(--text-muted); font-size:0.9rem; padding:10px;">대분류가 없습니다.</div>';
+        return;
+      }
+      mainCats.forEach(cat => {
+        const div = document.createElement('div');
+        div.className = 'main-cat-item';
+        div.dataset.cat = cat;
+        div.style.padding = '10px';
+        div.style.borderRadius = '4px';
+        div.style.cursor = 'pointer';
+        div.style.display = 'flex';
+        div.style.justifyContent = 'space-between';
+        div.style.alignItems = 'center';
+        div.style.border = '1px solid transparent';
+        if (appState.activeManageMainCat === cat) {
+          div.style.background = 'var(--bg-input)';
+          div.style.border = '1px solid var(--border-focus)';
+        } else {
+          div.style.background = 'transparent';
+          div.addEventListener('mouseenter', () => div.style.background = 'var(--bg-surface)');
+          div.addEventListener('mouseleave', () => { if(appState.activeManageMainCat !== cat) div.style.background = 'transparent'; });
+        }
+        
+        div.innerHTML = `
+          <span style="font-weight: 600; font-size: 0.95rem;">${cat}</span>
+          <button type="button" class="btn-delete-main-cat" data-cat="${cat}" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">&times;</button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function renderManageSubCategories() {
+      const container = document.getElementById('subCategoryList');
+      const textTitle = document.getElementById('selectedMainCategoryText');
+      if (!container || !textTitle) return;
+      
+      container.innerHTML = '';
+      const mainCat = appState.activeManageMainCat;
+      
+      if (!mainCat) {
+        textTitle.textContent = '';
+        container.innerHTML = '<div style="color:var(--text-muted); font-size:0.9rem; text-align:center; margin-top:20px;">대분류를 먼저 선택해주세요.</div>';
+        document.getElementById('newSubCategoryName').disabled = true;
+        return;
+      }
+      
+      textTitle.textContent = `(${mainCat})`;
+      document.getElementById('newSubCategoryName').disabled = false;
+      
+      const subCats = appState.masterCategories[mainCat] || [];
+      if (subCats.length === 0) {
+        container.innerHTML = '<div style="color:var(--text-muted); font-size:0.9rem; padding:10px;">등록된 소분류가 없습니다.</div>';
+        return;
+      }
+      
+      subCats.forEach(sub => {
+        const div = document.createElement('div');
+        div.style.padding = '8px 12px';
+        div.style.borderRadius = '4px';
+        div.style.background = 'var(--bg-surface)';
+        div.style.display = 'flex';
+        div.style.justifyContent = 'space-between';
+        div.style.alignItems = 'center';
+        
+        div.innerHTML = `
+          <span style="font-size: 0.9rem;">${sub}</span>
+          <button type="button" class="btn-delete-sub-cat" data-sub="${sub}" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">&times;</button>
+        `;
+        container.appendChild(div);
+      });
+    }
 
     // Excel File Upload
     document.getElementById('excelFileInput')?.addEventListener('change', handleExcelUpload);
@@ -1403,6 +1821,7 @@
         }
 
         if (newRecords.length > 0) {
+          applyCategoryRules(newRecords);
           appState.records = newRecords;
           saveData();
           populateFilterDropdowns();

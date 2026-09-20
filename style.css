@@ -1418,6 +1418,35 @@ select option:hover {
   to { opacity: 0; transform: translateY(-8px); }
 }
 
+/* Modal Large */
+.modal-lg {
+  max-width: 800px;
+}
+
+/* Category Inputs in Table */
+.input-table-category,
+.input-table-subcategory {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 0.8rem;
+  color: var(--text-primary);
+  width: 100%;
+  margin-bottom: 2px;
+}
+
+.input-table-category:focus,
+.input-table-subcategory:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+
+.badge-cat-input {
+  font-weight: 600;
+  color: var(--primary);
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .app-layout {
