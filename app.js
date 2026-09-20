@@ -13,6 +13,11 @@
   const MASTER_CAT_STORAGE_KEY = 'gyewon_master_categories_v1';
   const DELETED_RECORDS_KEY = 'gyewon_deleted_records_v1';
 
+  // --- Supabase Client ---
+  const supabaseUrl = 'https://hddlrrbscqrugxioduir.supabase.co';
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkZGxycmJzY3FydWd4aW9kdWlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4OTg2NjMsImV4cCI6MjEwNTQ3NDY2M30.4cPWb-1QIsH6voLdTOJba8bqXfm-yVlKolQrl4Q7-3s';
+  const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
   const DEFAULT_MASTER_CATEGORIES = {
     "식비": ["외식", "배달", "카페/간식", "식재료/마트"],
     "교통/차량": ["대중교통", "택시", "주유", "정비"],
@@ -132,74 +137,76 @@
   }
 
   // --- Initialization ---
-  function init() {
-    loadData();
+  async function init() {
+    await loadData();
     initTheme();
     populateFilterDropdowns();
     attachEventListeners();
     renderAll();
   }
 
-  function loadData() {
+  async function loadData() {
     try {
-      const savedDeleted = localStorage.getItem(DELETED_RECORDS_KEY);
-      if (savedDeleted) {
-        appState.deletedSignatures = new Set(JSON.parse(savedDeleted));
+      const { data: delData } = await supabase.from('deleted_signatures').select('signature');
+      if (delData) {
+        appState.deletedSignatures = new Set(delData.map(d => d.signature));
       }
 
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        appState.records = JSON.parse(saved);
+      const { data: recData } = await supabase.from('records').select('*');
+      if (recData && recData.length > 0) {
+        appState.records = recData;
       } else if (window.INITIAL_DATA && window.INITIAL_DATA.records) {
         let initialRecs = JSON.parse(JSON.stringify(window.INITIAL_DATA.records));
         appState.records = initialRecs.filter(r => !appState.deletedSignatures.has(getSignature(r)));
-        saveData();
-      }
-      const beforeCount = appState.records.length;
-      appState.records = appState.records.filter(r => !(r.merchant && r.merchant.includes('업비트')));
-      if (appState.records.length !== beforeCount) {
-        saveData();
+        if (appState.records.length > 0) {
+          await supabase.from('records').insert(appState.records);
+        }
       }
 
-      const savedRules = localStorage.getItem(RULES_STORAGE_KEY);
-      if (savedRules) {
-        appState.categoryRules = JSON.parse(savedRules);
+      const { data: rulesData } = await supabase.from('category_rules').select('*');
+      if (rulesData && rulesData.length > 0) {
+        appState.categoryRules = rulesData;
       }
 
-      const savedMasterCats = localStorage.getItem(MASTER_CAT_STORAGE_KEY);
-      if (savedMasterCats) {
-        appState.masterCategories = JSON.parse(savedMasterCats);
+      const { data: catData } = await supabase.from('master_categories').select('*').eq('id', 'default').single();
+      if (catData) {
+        appState.masterCategories = catData.data;
       } else {
         appState.masterCategories = JSON.parse(JSON.stringify(DEFAULT_MASTER_CATEGORIES));
-        saveMasterCategories();
+        await supabase.from('master_categories').insert({ id: 'default', data: appState.masterCategories });
       }
     } catch (e) {
-      console.error('Failed to load storage data:', e);
+      console.error('Failed to load data from Supabase:', e);
       if (window.INITIAL_DATA) {
         appState.records = JSON.parse(JSON.stringify(window.INITIAL_DATA.records));
       }
     }
   }
 
-  function saveData() {
+  async function saveData() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(appState.records));
+      if (appState.records.length > 0) {
+        await supabase.from('records').upsert(appState.records, { onConflict: 'id' });
+      }
     } catch (e) {
-      console.error('Failed to save to localStorage:', e);
+      console.error('Failed to save to Supabase:', e);
     }
   }
 
-  function saveRules() {
+  async function saveRules() {
     try {
-      localStorage.setItem(RULES_STORAGE_KEY, JSON.stringify(appState.categoryRules));
+      await supabase.from('category_rules').delete().neq('id', 0);
+      if (appState.categoryRules.length > 0) {
+        await supabase.from('category_rules').insert(appState.categoryRules);
+      }
     } catch (e) {
-      console.error('Failed to save rules to localStorage:', e);
+      console.error('Failed to save rules to Supabase:', e);
     }
   }
 
-  function saveMasterCategories() {
+  async function saveMasterCategories() {
     try {
-      localStorage.setItem(MASTER_CAT_STORAGE_KEY, JSON.stringify(appState.masterCategories));
+      await supabase.from('master_categories').upsert({ id: 'default', data: appState.masterCategories });
     } catch (e) {
       console.error('Failed to save master categories:', e);
     }
@@ -1220,11 +1227,12 @@
       if (confirm(`No. ${id} 지출 내역을 완전히 삭제하시겠습니까?`)) {
         const rec = appState.records.find(r => r.id === id);
         if (rec) {
-          appState.deletedSignatures.add(getSignature(rec));
-          localStorage.setItem(DELETED_RECORDS_KEY, JSON.stringify(Array.from(appState.deletedSignatures)));
+          const sig = getSignature(rec);
+          appState.deletedSignatures.add(sig);
+          supabase.from('deleted_signatures').insert({ signature: sig }); // background
         }
         appState.records = appState.records.filter(r => r.id !== id);
-        saveData();
+        supabase.from('records').delete().eq('id', id); // background
         renderAll();
         showToast(`No. ${id} 내역이 삭제되었습니다.`);
       }
@@ -1501,14 +1509,14 @@
     });
 
     // Reset Data to Initial
-    document.getElementById('btnResetData')?.addEventListener('click', () => {
+    document.getElementById('btnResetData')?.addEventListener('click', async () => {
       if (confirm('모든 수정사항을 취소하고 원본 엑셀 데이터(261건)로 초기화하시겠습니까? (삭제된 내역 기록도 초기화됩니다)')) {
-        localStorage.removeItem(STORAGE_KEY);
-        localStorage.removeItem(DELETED_RECORDS_KEY);
+        await supabase.from('records').delete().neq('id', 0);
+        await supabase.from('deleted_signatures').delete().neq('signature', '');
         appState.deletedSignatures.clear();
         if (window.INITIAL_DATA) {
           appState.records = JSON.parse(JSON.stringify(window.INITIAL_DATA.records));
-          saveData();
+          await supabase.from('records').insert(appState.records);
         }
         renderAll();
         showToast('원본 엑셀 데이터 및 삭제 기록이 초기화되었습니다.', 'info');
@@ -1548,7 +1556,7 @@
       if (e.target.closest('.btn-delete-rule')) {
         const id = Number(e.target.closest('.btn-delete-rule').dataset.id);
         appState.categoryRules = appState.categoryRules.filter(r => r.id !== id);
-        saveRules();
+        supabase.from('category_rules').delete().eq('id', id); // background
         renderRulesTable();
         showToast('규칙이 삭제되었습니다.');
       }
