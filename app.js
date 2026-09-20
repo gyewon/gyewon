@@ -147,19 +147,37 @@
 
   async function loadData() {
     try {
-      const { data: delData } = await supabase.from('deleted_signatures').select('signature');
+      const { data: delData, error: delErr } = await supabase.from('deleted_signatures').select('signature');
+      if (delErr) {
+        alert("Supabase Select Error (deleted_signatures): " + JSON.stringify(delErr));
+      }
       if (delData) {
         appState.deletedSignatures = new Set(delData.map(d => d.signature));
       }
 
-      const { data: recData } = await supabase.from('records').select('*');
+      const { data: recData, error: recError } = await supabase.from('records').select('*');
+      if (recError) {
+        console.error("Select Error:", recError);
+        alert("Supabase Select Error (records): " + JSON.stringify(recError));
+      }
+
       if (recData && recData.length > 0) {
         appState.records = recData;
       } else if (window.INITIAL_DATA && window.INITIAL_DATA.records) {
         let initialRecs = JSON.parse(JSON.stringify(window.INITIAL_DATA.records));
         appState.records = initialRecs.filter(r => !appState.deletedSignatures.has(getSignature(r)));
         if (appState.records.length > 0) {
-          await supabase.from('records').insert(appState.records);
+          const insertData = appState.records.map(r => {
+            const { origId, ...rest } = r;
+            return rest;
+          });
+          const { error: insError } = await supabase.from('records').insert(insertData);
+          if (insError) {
+            console.error("Initial Insert Error:", insError);
+            alert("Supabase Insert Error: " + JSON.stringify(insError));
+          } else {
+            showToast("Supabase에 초기 데이터 65건이 성공적으로 연동되었습니다!", "success");
+          }
         }
       }
 
@@ -186,7 +204,12 @@
   async function saveData() {
     try {
       if (appState.records.length > 0) {
-        await supabase.from('records').upsert(appState.records, { onConflict: 'id' });
+        const upsertData = appState.records.map(r => {
+          const { origId, ...rest } = r;
+          return rest;
+        });
+        const { error } = await supabase.from('records').upsert(upsertData, { onConflict: 'id' });
+        if (error) console.error("Upsert Error:", error);
       }
     } catch (e) {
       console.error('Failed to save to Supabase:', e);
