@@ -2029,6 +2029,8 @@
           renderAuthUI(sess);
           if (!isAppInitialized) {
             isAppInitialized = true;
+            const appLayout = document.querySelector('.app-layout');
+            if (appLayout) appLayout.style.display = 'flex';
             init();
           }
           return true;
