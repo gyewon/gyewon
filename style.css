@@ -1575,3 +1575,57 @@ select option:hover {
   transform: translateY(-1px);
 }
 
+/* ==========================================================================
+   Lock Screen
+   ========================================================================== */
+.lock-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: var(--bg-main);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s ease;
+}
+.lock-screen:not(.active) {
+  opacity: 0;
+  pointer-events: none;
+}
+.lock-box {
+  background: var(--bg-card);
+  padding: 40px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 360px;
+  width: 90%;
+}
+.lock-box h2 {
+  color: var(--text-primary);
+  font-size: 1.4rem;
+}
+.lock-box p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+.lock-box input {
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 1rem;
+  text-align: center;
+}
+.lock-error {
+  color: var(--accent-rose) !important;
+  font-size: 0.85rem !important;
+}

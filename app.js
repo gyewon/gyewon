@@ -136,11 +136,9 @@
     }, 2500);
   }
 
-  // --- Initialization ---
   async function init() {
     await loadData();
     initTheme();
-    initAuth();
     populateFilterDropdowns();
     attachEventListeners();
     renderAll();
@@ -149,27 +147,7 @@
   // --- Auth Management ---
   let currentSession = null;
 
-  async function initAuth() {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      currentSession = session;
-      renderAuthUI(currentSession);
-
-      supabase.auth.onAuthStateChange((event, session) => {
-        currentSession = session;
-        renderAuthUI(currentSession);
-        if (event === 'SIGNED_IN' && session?.user) {
-          const meta = session.user.user_metadata || {};
-          const name = meta.full_name || meta.name || session.user.email || '사용자';
-          showToast(`'${name}'님 환영합니다! (구글 로그인 성공)`, 'success');
-        } else if (event === 'SIGNED_OUT') {
-          showToast('로그아웃 되었습니다.', 'info');
-        }
-      });
-    } catch (e) {
-      console.error('Auth Init Error:', e);
-    }
-  }
+  // Auth initialization logic moved to initAuthAndLockScreen
 
   async function handleGoogleLogin() {
     try {
@@ -2010,11 +1988,93 @@
     e.target.value = ''; // reset file input
   }
 
+  let isAppInitialized = false;
+
+  async function initAuthAndLockScreen() {
+    const lockScreen = document.getElementById('lockScreen');
+    const btnLockGoogleLogin = document.getElementById('btnLockGoogleLogin');
+    const lockError = document.getElementById('lockError');
+
+    if (btnLockGoogleLogin) {
+      btnLockGoogleLogin.addEventListener('click', handleGoogleLogin);
+    }
+
+    const checkAccess = async (sess) => {
+      if (sess && sess.user && sess.user.email) {
+        const email = sess.user.email.toLowerCase();
+        
+        try {
+          // DB의 allowed_users 테이블에서 이메일 조회
+          const { data, error } = await supabase
+            .from('allowed_users')
+            .select('email')
+            .eq('email', email)
+            .single();
+            
+          if (error || !data) {
+            // DB에 등록되어 있지 않은 경우 차단
+            if (lockError) {
+              lockError.textContent = `승인되지 않은 계정입니다. (${email})`;
+              lockError.style.display = 'block';
+            }
+            await supabase.auth.signOut();
+            return false;
+          }
+          
+          // 승인된 계정인 경우 접속 허용
+          if (lockScreen) {
+            lockScreen.classList.remove('active');
+            setTimeout(() => { lockScreen.style.display = 'none'; }, 300);
+          }
+          renderAuthUI(sess);
+          if (!isAppInitialized) {
+            isAppInitialized = true;
+            init();
+          }
+          return true;
+        } catch (e) {
+          console.error("DB Auth Check Error: ", e);
+          return false;
+        }
+      }
+      return false;
+    };
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      currentSession = session;
+      await checkAccess(currentSession);
+
+      supabase.auth.onAuthStateChange(async (event, sess) => {
+        currentSession = sess;
+        
+        if (event === 'SIGNED_IN' && sess?.user) {
+          const granted = await checkAccess(sess);
+          if (granted) {
+            const meta = sess.user.user_metadata || {};
+            const name = meta.full_name || meta.name || sess.user.email || '사용자';
+            showToast(`'${name}'님 환영합니다!`, 'success');
+          }
+        } else if (event === 'SIGNED_OUT') {
+          showToast('로그아웃 되었습니다.', 'info');
+          if (lockScreen) {
+            lockScreen.style.display = 'flex';
+            void lockScreen.offsetWidth; // force reflow
+            lockScreen.classList.add('active');
+          }
+          renderAuthUI(null);
+        }
+      });
+    } catch (e) {
+      console.error('Auth Init Error:', e);
+    }
+  }
+
   // --- Run on DOM Ready ---
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', initAuthAndLockScreen);
   } else {
-    init();
+    initAuthAndLockScreen();
   }
 
 })();
