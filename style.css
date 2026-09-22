@@ -1576,7 +1576,7 @@ select option:hover {
 }
 
 /* ==========================================================================
-   Lock Screen
+   Premium Lock Screen (Glassmorphism & Micro-animations)
    ========================================================================== */
 .lock-screen {
   position: fixed;
@@ -1589,43 +1589,159 @@ select option:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.5s ease, backdrop-filter 0.5s ease;
+  overflow: hidden;
 }
+
+/* 몽환적인 배경 패턴 애니메이션 */
+.lock-bg-pattern {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: 
+    radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.12) 0%, transparent 40%);
+  animation: rotateBG 30s linear infinite;
+  z-index: -1;
+}
+
+@keyframes rotateBG {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 .lock-screen:not(.active) {
   opacity: 0;
   pointer-events: none;
 }
+
+/* 글래스모피즘(유리질감) 카드 */
 .lock-box {
-  background: var(--bg-card);
-  padding: 40px;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-lg);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  padding: 48px 40px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   text-align: center;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  max-width: 360px;
+  align-items: center;
+  gap: 20px;
   width: 90%;
+  max-width: 420px;
+  transform: translateY(0);
+  animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* 라이트 모드일 때의 유리질감 보정 */
+[data-theme="light"] .lock-box {
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+@keyframes slideUpFade {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lock-icon-wrapper {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  box-shadow: 0 0 24px rgba(99, 102, 241, 0.3);
+}
+
+.lock-emoji {
+  font-size: 28px;
+  line-height: 1;
+}
+
 .lock-box h2 {
   color: var(--text-primary);
-  font-size: 1.4rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin: 0;
 }
+
 .lock-box p {
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0 0 12px 0;
 }
-.lock-box input {
-  padding: 12px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-color);
-  background: var(--bg-input);
-  color: var(--text-primary);
+
+/* 구글 공식 스타일 프리미엄 버튼 */
+.btn-premium-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 24px;
+  background-color: #ffffff;
+  color: #3c4043;
+  border: 1px solid #dadce0;
+  border-radius: 12px;
   font-size: 1rem;
-  text-align: center;
+  font-weight: 600;
+  font-family: 'Pretendard', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
+
+.btn-premium-google:hover {
+  background-color: #f8f9fa;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  border-color: #d2e3fc;
+}
+
+.btn-premium-google:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.google-logo {
+  width: 20px;
+  height: 20px;
+}
+
+/* 에러 메시지 애니메이션 (흔들림 효과) */
 .lock-error {
   color: var(--accent-rose) !important;
   font-size: 0.85rem !important;
+  font-weight: 500;
+  background: rgba(244, 63, 94, 0.1);
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(244, 63, 94, 0.2);
+  width: 100%;
+  margin: 0 !important;
+  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
 }
