@@ -1947,27 +1947,78 @@
           return;
         }
 
+        const headerRow = rows[0] || [];
+        
+        const findCol = (keywords, defaultIdx) => {
+          for (let i = 0; i < headerRow.length; i++) {
+            const h = String(headerRow[i] || '').replace(/\s+/g, '');
+            if (keywords.some(k => h.includes(k))) return i;
+          }
+          return defaultIdx;
+        };
+
+        const col = {
+          date: findCol(['날짜', '거래일시', '일시'], 1),
+          time: findCol(['시간'], 2),
+          month: 3,
+          cat: findCol(['대분류', '분류', '카테고리'], 4),
+          sub: findCol(['소분류', '하위카테고리'], 5),
+          merchant: findCol(['가맹점', '내용'], 6),
+          amt: findCol(['지출금액', '금액'], 7),
+          origPay: findCol(['원본결제수단', '결제수단'], 8),
+          actualCard: findCol(['실제결제카드'], 9),
+          inst: findCol(['할부'], 10),
+          bill: findCol(['청구액'], 11),
+          exclude: findCol(['제외'], 12),
+          memo: findCol(['메모'], 13)
+        };
+
         const newRecords = [];
         for (let r = 1; r < rows.length; r++) {
           const row = rows[r];
-          if (!row || (!row[0] && !row[1])) continue;
+          if (!row || row.length === 0) continue;
           if (row[0] === '총 합 계' || row[0] === '합계') continue;
+          if (!row[col.date] && !row[col.amt]) continue;
+
+          const parseNum = (val) => {
+            if (val === undefined || val === null) return 0;
+            const numStr = String(val).replace(/,/g, '').trim();
+            return Number(numStr) || 0;
+          };
+
+          let dateStr = String(row[col.date] || '');
+          let timeStr = String(row[col.time] || '');
+          
+          if (dateStr.length > 10 && dateStr.includes(' ')) {
+            const parts = dateStr.split(' ');
+            dateStr = parts[0];
+            if (!timeStr) timeStr = parts[1];
+          }
+          dateStr = dateStr.slice(0, 10).replace(/\./g, '-');
+
+          let amount = parseNum(row[col.amt]);
+          
+          // 뱅크샐러드 '수입/지출' 컬럼이 있는 경우 수입은 제외하거나 음수 처리
+          const incExpCol = findCol(['수입/지출'], -1);
+          if (incExpCol !== -1 && String(row[incExpCol]).includes('수입')) {
+             continue; // 수입은 제외 (가계부 지출 대시보드이므로)
+          }
 
           newRecords.push({
             id: Number(row[0]) || r,
-            date: String(row[1] || '').slice(0, 10),
-            time: String(row[2] || ''),
-            month: String(row[3] || ''),
-            category: String(row[4] || '기타'),
-            subCategory: String(row[5] || ''),
-            merchant: String(row[6] || ''),
-            amount: Number(row[7]) || 0,
-            origPay: String(row[8] || ''),
-            actualCard: String(row[9] || '기타 카드'),
-            installment: String(row[10] || '일시불'),
-            billingAmount: Number(row[11]) || Number(row[7]) || 0,
-            exclude: String(row[12] || 'N').trim().toUpperCase() === 'Y' ? 'Y' : 'N',
-            memo: String(row[13] || '')
+            date: dateStr,
+            time: timeStr,
+            month: String(row[col.month] || ''),
+            category: String(row[col.cat] || '기타'),
+            subCategory: String(row[col.sub] || ''),
+            merchant: String(row[col.merchant] || ''),
+            amount: amount,
+            origPay: String(row[col.origPay] || ''),
+            actualCard: String(row[col.actualCard] || '기타 카드'),
+            installment: String(row[col.inst] || '일시불'),
+            billingAmount: row[col.bill] ? parseNum(row[col.bill]) : amount,
+            exclude: String(row[col.exclude] || 'N').trim().toUpperCase() === 'Y' ? 'Y' : 'N',
+            memo: String(row[col.memo] || '')
           });
         }
 
