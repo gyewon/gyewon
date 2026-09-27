@@ -1957,6 +1957,8 @@
           return defaultIdx;
         };
 
+        const isBankSalad = findCol(['수입/지출'], -1) !== -1 || findCol(['거래일시'], -1) !== -1;
+
         const col = {
           date: findCol(['날짜', '거래일시', '일시'], 1),
           time: findCol(['시간'], 2),
@@ -1970,7 +1972,8 @@
           inst: findCol(['할부'], 10),
           bill: findCol(['청구액'], 11),
           exclude: findCol(['제외'], 12),
-          memo: findCol(['메모'], 13)
+          memo: findCol(['메모'], 13),
+          incExp: findCol(['수입/지출'], -1)
         };
 
         const newRecords = [];
@@ -1978,18 +1981,19 @@
           const row = rows[r];
           if (!row || row.length === 0) continue;
           if (row[0] === '총 합 계' || row[0] === '합계') continue;
+          
           if (!row[col.date] && !row[col.amt]) continue;
 
           const parseNum = (val) => {
             if (val === undefined || val === null) return 0;
-            const numStr = String(val).replace(/,/g, '').trim();
+            const numStr = String(val).replace(/[^0-9.-]/g, '');
             return Number(numStr) || 0;
           };
 
           let dateStr = String(row[col.date] || '');
           let timeStr = String(row[col.time] || '');
           
-          if (dateStr.length > 10 && dateStr.includes(' ')) {
+          if (isBankSalad && dateStr.length > 10 && dateStr.includes(' ')) {
             const parts = dateStr.split(' ');
             dateStr = parts[0];
             if (!timeStr) timeStr = parts[1];
@@ -1997,11 +2001,11 @@
           dateStr = dateStr.slice(0, 10).replace(/\./g, '-');
 
           let amount = parseNum(row[col.amt]);
-          
-          // 뱅크샐러드 '수입/지출' 컬럼이 있는 경우 수입은 제외하거나 음수 처리
-          const incExpCol = findCol(['수입/지출'], -1);
-          if (incExpCol !== -1 && String(row[incExpCol]).includes('수입')) {
-             continue; // 수입은 제외 (가계부 지출 대시보드이므로)
+          let isIncome = col.incExp !== -1 && String(row[col.incExp]).includes('수입');
+          let excludeFlag = String(row[col.exclude] || 'N').trim().toUpperCase() === 'Y' ? 'Y' : 'N';
+
+          if (isIncome) {
+             excludeFlag = 'Y'; // 수입 항목은 지출 대시보드 통계에서 제외(exclude) 처리하여 204건 모두 표시되게 함
           }
 
           newRecords.push({
@@ -2017,7 +2021,7 @@
             actualCard: String(row[col.actualCard] || '기타 카드'),
             installment: String(row[col.inst] || '일시불'),
             billingAmount: row[col.bill] ? parseNum(row[col.bill]) : amount,
-            exclude: String(row[col.exclude] || 'N').trim().toUpperCase() === 'Y' ? 'Y' : 'N',
+            exclude: excludeFlag,
             memo: String(row[col.memo] || '')
           });
         }
@@ -2029,6 +2033,8 @@
           populateFilterDropdowns();
           renderAll();
           showToast(`새로운 엑셀 파일에서 ${newRecords.length}건을 성공적으로 불러왔습니다!`, 'success');
+        } else {
+          alert('파싱된 데이터가 0건입니다. 엑셀 파일의 형식을 확인해주세요.');
         }
       } catch (err) {
         console.error(err);
